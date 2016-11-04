@@ -182,4 +182,14 @@ public class TaskPoolTest extends Assert {
         assertEquals(3, taskPool.get(2).getSerialNum());
     }
 
+    @Test
+    public void zeroIndexNotExistTask() throws InterruptedException {
+        initMultiThreadTaskPool();
+        ZonedDateTime now = ZonedDateTime.now();
+        CalculatedFactorial cf = CalculatedFactorial.factorial(3);
+        ScheduledTask task = new ScheduledTask(now, cf);
+        assertEquals(0, taskPool.getTaskIndex(task));
+
+    }
+
 }

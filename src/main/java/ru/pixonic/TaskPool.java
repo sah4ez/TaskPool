@@ -21,12 +21,7 @@ public class TaskPool extends CopyOnWriteArrayList<ScheduledTask>{
         return cf;
     }
 
-    public class ExceptionExistTask extends RuntimeException{
-
-    }
-
     public void addTask(ScheduledTask task) throws Exception {
-        if (this.contains(task)) throw new ExceptionExistTask();
         this.add(task);
         task.setSerialNum(size());
         Collections.sort(this);
