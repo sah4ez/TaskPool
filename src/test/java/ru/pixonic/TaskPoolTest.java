@@ -87,8 +87,8 @@ public class TaskPoolTest extends Assert {
     public void addMultiThreadTask() throws Exception {
         initMultiThreadTaskPool();
 
-        assertEquals(1, taskPool.byIndex(0).getCalculatedFactorial().calc().intValue());
-        assertEquals(6, taskPool.byIndex(3).getCalculatedFactorial().calc().intValue());
+        assertEquals(1, taskPool.get(0).getCalculatedFactorial().calc().intValue());
+        assertEquals(6, taskPool.get(3).getCalculatedFactorial().calc().intValue());
     }
 
     @Test

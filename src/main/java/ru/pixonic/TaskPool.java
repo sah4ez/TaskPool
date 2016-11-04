@@ -26,9 +26,4 @@ public class TaskPool extends CopyOnWriteArrayList<ScheduledTask>{
         task.setSerialNum(size());
         Collections.sort(this);
     }
-
-    public ScheduledTask byIndex(Integer index){
-        return ((ScheduledTask) this.get(index));
-    }
-
 }

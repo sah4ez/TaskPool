@@ -47,10 +47,8 @@ public class ScheduledTask implements Comparable, Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         while (ZonedDateTime.now().compareTo(getDateTime()) <= 0) {
-//            Thread.sleep(0, 50);
         }
         Integer result = getCalculatedFactorial().calc();
-        System.out.println(result + "::"+ getDateTime() + "::" + ZonedDateTime.now());
         return result;
     }
 }
