@@ -1,11 +1,9 @@
 package ru.pixonic;
 
-import java.util.concurrent.Callable;
-
 /**
  * Created by sah4ez on 04.11.16.
  */
-public class CalculatedFactorial implements Callable<Integer> {
+public class CalculatedFactorial{
 
     private Integer number = 0;
     private Integer result = 1;
@@ -17,8 +15,8 @@ public class CalculatedFactorial implements Callable<Integer> {
         this.number = number;
     }
 
-    @Override
-    public Integer call() throws Exception {
+    public Integer calc(){
+        result = 1;
         for (int i = 1; i<=number; i++){
             result *= i;
         }

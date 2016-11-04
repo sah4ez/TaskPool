@@ -1,14 +1,16 @@
 package ru.pixonic;
 
 import java.time.ZonedDateTime;
+import java.util.concurrent.Callable;
 
 /**
  * Created by sah4ez on 04.11.16.
  */
-public class ScheduledTask implements Comparable {
+public class ScheduledTask implements Comparable, Callable<Integer> {
 
     private ZonedDateTime dateTime = ZonedDateTime.now();
     private CalculatedFactorial calculatedFactorial = new CalculatedFactorial();
+    private int serialNum = 0;
 
     public ScheduledTask(ZonedDateTime dateTime, CalculatedFactorial calculatedFactorial) {
         this.dateTime = dateTime;
@@ -23,8 +25,32 @@ public class ScheduledTask implements Comparable {
         return calculatedFactorial;
     }
 
+    public void setSerialNum(int serialNum) {
+        this.serialNum = serialNum;
+    }
+
+    public int getSerialNum() {
+        return serialNum;
+    }
+
     @Override
     public int compareTo(Object o) {
-        return getDateTime().compareTo(((ScheduledTask) o).getDateTime());
+        ScheduledTask task = ((ScheduledTask) o);
+        int result = getDateTime().compareTo(task.getDateTime());
+        if (result != 0) return result;
+        result = serialNum - task.serialNum;
+        if (result != 0)
+            return (int) result / Math.abs(result);
+        return 0;
+    }
+
+    @Override
+    public Integer call() throws Exception {
+        while (ZonedDateTime.now().compareTo(getDateTime()) <= 0) {
+//            Thread.sleep(0, 50);
+        }
+        Integer result = getCalculatedFactorial().calc();
+        System.out.println(result + "::"+ getDateTime() + "::" + ZonedDateTime.now());
+        return result;
     }
 }

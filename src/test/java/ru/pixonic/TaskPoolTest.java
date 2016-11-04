@@ -8,6 +8,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 /**
@@ -34,7 +38,7 @@ public class TaskPoolTest extends Assert {
     }
 
     @Test
-    public void addTaskToTaskPoll() throws Exception {
+    public void addTaskToTaskPool() throws Exception {
 
         assertEquals(0, taskPool.size());
 
@@ -81,10 +85,78 @@ public class TaskPoolTest extends Assert {
 
     @Test
     public void addMultiThreadTask() throws Exception {
-        for (int i = 0; i < 10; i++){
+        initMultiThreadTaskPool();
+
+        assertEquals(1, taskPool.byIndex(0).getCalculatedFactorial().calc().intValue());
+        assertEquals(6, taskPool.byIndex(3).getCalculatedFactorial().calc().intValue());
+    }
+
+    @Test
+    public void testExecutionTaskFromTaskPool() throws Exception {
+        ArrayList<Integer> results = new ArrayList<>();
+
+        ZonedDateTime now = ZonedDateTime.now();
+
+        CalculatedFactorial cf1 = CalculatedFactorial.factorial(1);
+        CalculatedFactorial cf2 = CalculatedFactorial.factorial(2);
+        CalculatedFactorial cf3 = CalculatedFactorial.factorial(3);
+        CalculatedFactorial cf10 = CalculatedFactorial.factorial(10);
+
+        taskPool.addTask(new ScheduledTask(now, cf1));
+        taskPool.addTask(new ScheduledTask(now, cf2));
+        taskPool.addTask(new ScheduledTask(now, cf3));
+
+        initMultiThreadTaskPool();
+
+        Boolean addTestDataSet = false;
+
+        ExecutorService es = Executors.newFixedThreadPool(10);
+        while (taskPool.size() > 0) {
+            ScheduledTask task = taskPool.popFirst();
+            Future<Integer> f = es.submit(task);
+            while (!f.isDone()) {
+
+            }
+            if (taskPool.size() == 2 && !addTestDataSet){
+                taskPool.addTask(new ScheduledTask(now, cf10));
+                taskPool.addTask(new ScheduledTask(now, cf3));
+                taskPool.addTask(new ScheduledTask(now, cf10));
+                taskPool.addTask(new ScheduledTask(now, cf10));
+
+                addTestDataSet = true;
+            }
+            results.add(f.get());
+        }
+
+        es.shutdown();
+
+        assertEquals(1,results.get(0).intValue());
+        assertEquals(2,results.get(1).intValue());
+        assertEquals(6,results.get(2).intValue());
+        assertEquals(1,results.get(3).intValue());
+        assertEquals(1,results.get(4).intValue());
+        assertEquals(2,results.get(5).intValue());
+        assertEquals(6,results.get(6).intValue());
+        assertEquals(24,results.get(7).intValue());
+        assertEquals(120,results.get(8).intValue());
+        assertEquals(720,results.get(9).intValue());
+        assertEquals(5040,results.get(10).intValue());
+        assertEquals(3628800,results.get(11).intValue());
+        assertEquals(6,results.get(12).intValue());
+        assertEquals(3628800,results.get(13).intValue());
+        assertEquals(3628800,results.get(14).intValue());
+        assertEquals(40320,results.get(15).intValue());
+        assertEquals(362880,results.get(16).intValue());
+    }
+
+    public void initMultiThreadTaskPool() throws InterruptedException {
+        for (int i = 0; i < 10; i++) {
             int finalI = i;
             Thread threadTask = new Thread(() -> {
-                ZonedDateTime dateTime = ZonedDateTime.now();
+                LocalDate date = LocalDate.now();
+                LocalTime time = LocalTime.now();
+                time = LocalTime.of(time.getHour(), time.getMinute(), time.getSecond(), time.getNano());
+                ZonedDateTime dateTime = ZonedDateTime.of(date, time, zoneId);
                 CalculatedFactorial cf = CalculatedFactorial.factorial(finalI);
                 ScheduledTask task = new ScheduledTask(dateTime, cf);
                 try {
@@ -94,16 +166,20 @@ public class TaskPoolTest extends Assert {
                 }
             });
             threadTask.start();
-            Thread.sleep(100);
         }
-
-        System.out.println(taskPool.size());
-        taskPool.forEach(t -> System.out.println(t.getDateTime()));
     }
 
     @Test
-    public void testExecutionTaskFromTaskPool(){
+    public void orderAddAtTheTimeTask() throws Exception {
+        ZonedDateTime now = ZonedDateTime.now();
+        CalculatedFactorial cf = CalculatedFactorial.factorial(3);
+        taskPool.addTask(new ScheduledTask(now, cf));
+        taskPool.addTask(new ScheduledTask(now, cf));
+        taskPool.addTask(new ScheduledTask(now, cf));
 
+        assertEquals(1, taskPool.get(0).getSerialNum());
+        assertEquals(2, taskPool.get(1).getSerialNum());
+        assertEquals(3, taskPool.get(2).getSerialNum());
     }
 
 }
