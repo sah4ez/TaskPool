@@ -77,9 +77,6 @@ public class TaskPoolTest extends Assert {
 
         assertEquals(3, taskPool.size());
 
-        assertEquals(1, taskPool.getTaskIndex(task2));
-        assertEquals(2, taskPool.getTaskIndex(task));
-        assertEquals(0, taskPool.getTaskIndex(task3));
     }
 
 
@@ -87,8 +84,10 @@ public class TaskPoolTest extends Assert {
     public void addMultiThreadTask() throws Exception {
         initMultiThreadTaskPool();
 
-        assertEquals(1, taskPool.get(0).getCalculatedFactorial().calc().intValue());
-        assertEquals(6, taskPool.get(3).getCalculatedFactorial().calc().intValue());
+        assertEquals(1, taskPool.poll().getCalculatedFactorial().calc().intValue());
+        assertEquals(1, taskPool.poll().getCalculatedFactorial().calc().intValue());
+        assertEquals(2, taskPool.poll().getCalculatedFactorial().calc().intValue());
+        assertEquals(6, taskPool.poll().getCalculatedFactorial().calc().intValue());
     }
 
     @Test
@@ -112,12 +111,12 @@ public class TaskPoolTest extends Assert {
 
         ExecutorService es = Executors.newFixedThreadPool(10);
         while (taskPool.size() > 0) {
-            ScheduledTask task = taskPool.popFirst();
+            ScheduledTask task = taskPool.poll();
             Future<Integer> f = es.submit(task);
             while (!f.isDone()) {
 
             }
-            if (taskPool.size() == 2 && !addTestDataSet){
+            if (taskPool.size() == 2 && !addTestDataSet) {
                 taskPool.addTask(new ScheduledTask(now, cf10));
                 taskPool.addTask(new ScheduledTask(now, cf3));
                 taskPool.addTask(new ScheduledTask(now, cf10));
@@ -130,23 +129,23 @@ public class TaskPoolTest extends Assert {
 
         es.shutdown();
 
-        assertEquals(1,results.get(0).intValue());
-        assertEquals(2,results.get(1).intValue());
-        assertEquals(6,results.get(2).intValue());
-        assertEquals(1,results.get(3).intValue());
-        assertEquals(1,results.get(4).intValue());
-        assertEquals(2,results.get(5).intValue());
-        assertEquals(6,results.get(6).intValue());
-        assertEquals(24,results.get(7).intValue());
-        assertEquals(120,results.get(8).intValue());
-        assertEquals(720,results.get(9).intValue());
-        assertEquals(5040,results.get(10).intValue());
-        assertEquals(3628800,results.get(11).intValue());
-        assertEquals(6,results.get(12).intValue());
-        assertEquals(3628800,results.get(13).intValue());
-        assertEquals(3628800,results.get(14).intValue());
-        assertEquals(40320,results.get(15).intValue());
-        assertEquals(362880,results.get(16).intValue());
+        assertEquals(1, results.get(0).intValue());
+        assertEquals(2, results.get(1).intValue());
+        assertEquals(6, results.get(2).intValue());
+        assertEquals(1, results.get(3).intValue());
+        assertEquals(1, results.get(4).intValue());
+        assertEquals(2, results.get(5).intValue());
+        assertEquals(6, results.get(6).intValue());
+        assertEquals(24, results.get(7).intValue());
+        assertEquals(120, results.get(8).intValue());
+        assertEquals(720, results.get(9).intValue());
+        assertEquals(5040, results.get(10).intValue());
+        assertEquals(3628800, results.get(11).intValue());
+        assertEquals(6, results.get(12).intValue());
+        assertEquals(3628800, results.get(13).intValue());
+        assertEquals(3628800, results.get(14).intValue());
+        assertEquals(40320, results.get(15).intValue());
+        assertEquals(362880, results.get(16).intValue());
     }
 
     public void initMultiThreadTaskPool() throws InterruptedException {
@@ -166,6 +165,7 @@ public class TaskPoolTest extends Assert {
                 }
             });
             threadTask.start();
+            threadTask.join();
         }
     }
 
@@ -177,19 +177,49 @@ public class TaskPoolTest extends Assert {
         taskPool.addTask(new ScheduledTask(now, cf));
         taskPool.addTask(new ScheduledTask(now, cf));
 
-        assertEquals(1, taskPool.get(0).getSerialNum());
-        assertEquals(2, taskPool.get(1).getSerialNum());
-        assertEquals(3, taskPool.get(2).getSerialNum());
+        assertEquals(1, taskPool.poll().getSerialNum().intValue());
+        assertEquals(2, taskPool.poll().getSerialNum().intValue());
+        assertEquals(3, taskPool.poll().getSerialNum().intValue());
     }
 
+    //    @Ignore
     @Test
-    public void zeroIndexNotExistTask() throws InterruptedException {
-        initMultiThreadTaskPool();
-        ZonedDateTime now = ZonedDateTime.now();
-        CalculatedFactorial cf = CalculatedFactorial.factorial(3);
-        ScheduledTask task = new ScheduledTask(now, cf);
-        assertEquals(0, taskPool.getTaskIndex(task));
+    public void testStressMultiThread() {
+        Thread addThread = new Thread(() -> {
+            for (int i = 0; i < 500_000; i++) {
+                ZonedDateTime now = ZonedDateTime.now();
+                if (now.getMinute() < 55) {
+                    int m = now.getMinute() + 1;
+                    if (i > 100_000) m = now.getMinute() + 1;
+                    if (i > 200_000) m = now.getMinute() + 2;
+                    if (i > 300_000) m = now.getMinute() + 3;
+                    if (i > 500_000) m = now.getMinute() + 4;
 
+                    now = ZonedDateTime.of(
+                            now.getYear(),
+                            now.getMonthValue(),
+                            now.getDayOfMonth(),
+                            now.getHour(),
+                            m,
+                            now.getSecond(),
+                            now.getNano(),
+                            zoneId
+                    );
+                }
+                CalculatedFactorial cf = CalculatedFactorial.factorial(12);
+                taskPool.addTask(new ScheduledTask(now, cf));
+            }
+        });
+        addThread.start();
+
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        taskPool.execute();
     }
+
 
 }

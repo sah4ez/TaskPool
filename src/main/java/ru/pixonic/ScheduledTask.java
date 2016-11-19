@@ -6,11 +6,11 @@ import java.util.concurrent.Callable;
 /**
  * Created by sah4ez on 04.11.16.
  */
-public class ScheduledTask implements Comparable, Callable<Integer> {
+public class ScheduledTask implements Callable<Integer> {
 
     private ZonedDateTime dateTime = ZonedDateTime.now();
     private CalculatedFactorial calculatedFactorial = new CalculatedFactorial();
-    private int serialNum = 0;
+    private Integer serialNum = 0;
 
     public ScheduledTask(ZonedDateTime dateTime, CalculatedFactorial calculatedFactorial) {
         this.dateTime = dateTime;
@@ -25,30 +25,30 @@ public class ScheduledTask implements Comparable, Callable<Integer> {
         return calculatedFactorial;
     }
 
-    public void setSerialNum(int serialNum) {
+    public void setSerialNum(Integer serialNum) {
         this.serialNum = serialNum;
     }
 
-    public int getSerialNum() {
+    public Integer getSerialNum() {
         return serialNum;
     }
 
-    @Override
-    public int compareTo(Object o) {
-        ScheduledTask task = ((ScheduledTask) o);
-        int result = getDateTime().compareTo(task.getDateTime());
-        if (result != 0) return result;
-        result = serialNum - task.serialNum;
-        if (result != 0)
-            return (int) result / Math.abs(result);
-        return 0;
-    }
+//    @Override
+//    public int compareTo(Object o) {
+//        ScheduledTask task = (ScheduledTask) o;
+////        int r =getDateTime().compareTo(task.getDateTime());
+////        if(r != 0) return r;
+//
+//        return  Integer.compare(getSerialNum().intValue(), task.getSerialNum().intValue());
+////        if(r != 0) return r;
+////
+////        return 0;
+//    }
 
     @Override
-    public Integer call() throws Exception {
-        while (ZonedDateTime.now().compareTo(getDateTime()) <= 0) {
-        }
-        Integer result = getCalculatedFactorial().calc();
-        return result;
+    public Integer call(){
+//        while (ZonedDateTime.now().compareTo(getDateTime()) <= 0) {
+//        }
+        return getCalculatedFactorial().calc();
     }
 }

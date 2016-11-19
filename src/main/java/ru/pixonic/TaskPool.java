@@ -1,29 +1,51 @@
 package ru.pixonic;
 
-import java.util.Collections;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.time.ZonedDateTime;
+import java.util.Comparator;
+import java.util.concurrent.*;
 
 /**
  * Created by sah4ez on 04.11.16.
  */
-public class TaskPool extends CopyOnWriteArrayList<ScheduledTask>{
+public class TaskPool extends PriorityBlockingQueue<ScheduledTask> {
 
-    public int getTaskIndex(ScheduledTask task) {
-        if (stream().filter(st -> st.equals(task)).findFirst().isPresent()){
-            return this.indexOf(task);
-        }
-        return 0;
+    ScheduledExecutorService es = Executors.newScheduledThreadPool(9);
+
+    public TaskPool() {
+        super(10,
+                Comparator.comparing(ScheduledTask::getDateTime)
+                        .thenComparing(ScheduledTask::getSerialNum));
     }
 
-    public ScheduledTask popFirst() {
-        ScheduledTask cf = get(0);
-        this.remove(0);
-        return cf;
-    }
-
-    public void addTask(ScheduledTask task) throws Exception {
+    public void addTask(ScheduledTask task) {
+        task.setSerialNum(size() + 1);
         this.add(task);
-        task.setSerialNum(size());
-        Collections.sort(this);
+    }
+
+    public void execute() {
+        Runnable run = () -> {
+            while (!isEmpty()) {
+                try {
+                    if (ZonedDateTime.now().compareTo(peek().getDateTime()) >= 0) {
+                        System.out.print(peek().getDateTime().toLocalTime() + " number " + peek().getSerialNum());
+                        Future<Integer> future = es.submit(poll());
+                        try {
+                            System.out.println(" result " + future.get() + " time Execute "+ ZonedDateTime.now().toLocalTime());
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
+                    } else Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        Thread thread = new Thread(run);
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
