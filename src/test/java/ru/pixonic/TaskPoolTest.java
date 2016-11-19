@@ -2,6 +2,7 @@ package ru.pixonic;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -182,8 +183,8 @@ public class TaskPoolTest extends Assert {
         assertEquals(3, taskPool.poll().getSerialNum().intValue());
     }
 
-    //    @Ignore
-    @Test
+    @Ignore
+//    @Test
     public void testStressMultiThread() {
         Thread addThread = new Thread(() -> {
             for (int i = 0; i < 500_000; i++) {
