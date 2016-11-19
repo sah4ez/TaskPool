@@ -33,22 +33,8 @@ public class ScheduledTask implements Callable<Integer> {
         return serialNum;
     }
 
-//    @Override
-//    public int compareTo(Object o) {
-//        ScheduledTask task = (ScheduledTask) o;
-////        int r =getDateTime().compareTo(task.getDateTime());
-////        if(r != 0) return r;
-//
-//        return  Integer.compare(getSerialNum().intValue(), task.getSerialNum().intValue());
-////        if(r != 0) return r;
-////
-////        return 0;
-//    }
-
     @Override
     public Integer call(){
-//        while (ZonedDateTime.now().compareTo(getDateTime()) <= 0) {
-//        }
         return getCalculatedFactorial().calc();
     }
 }

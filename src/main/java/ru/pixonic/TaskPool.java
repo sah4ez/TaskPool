@@ -23,14 +23,25 @@ public class TaskPool extends PriorityBlockingQueue<ScheduledTask> {
     }
 
     public void execute() {
-        Runnable run = () -> {
+        Runnable run = task();
+        Thread thread = new Thread(run);
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Runnable task() {
+        return () -> {
             while (!isEmpty()) {
                 try {
                     if (ZonedDateTime.now().compareTo(peek().getDateTime()) >= 0) {
                         System.out.print(peek().getDateTime().toLocalTime() + " number " + peek().getSerialNum());
                         Future<Integer> future = es.submit(poll());
                         try {
-                            System.out.println(" result " + future.get() + " time Execute "+ ZonedDateTime.now().toLocalTime());
+                            System.out.println(" result " + future.get() + " time Execute " + ZonedDateTime.now().toLocalTime());
                         } catch (ExecutionException e) {
                             e.printStackTrace();
                         }
@@ -40,12 +51,5 @@ public class TaskPool extends PriorityBlockingQueue<ScheduledTask> {
                 }
             }
         };
-        Thread thread = new Thread(run);
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }
