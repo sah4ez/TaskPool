@@ -1,18 +1,18 @@
 package ru.pixonic;
 
-import java.time.ZonedDateTime;
 import java.util.Comparator;
-import java.util.concurrent.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.PriorityBlockingQueue;
 
 /**
  * Created by sah4ez on 04.11.16.
  */
 public class TaskPool extends PriorityBlockingQueue<ScheduledTask> {
 
-    ScheduledExecutorService es = Executors.newScheduledThreadPool(9);
+    ForkJoinPool es = ForkJoinPool.commonPool();
 
     public TaskPool() {
-        super(10,
+        super(1000,
                 Comparator.comparing(ScheduledTask::getDateTime)
                         .thenComparing(ScheduledTask::getSerialNum));
     }
@@ -33,22 +33,20 @@ public class TaskPool extends PriorityBlockingQueue<ScheduledTask> {
         }
     }
 
-    public Runnable task() {
+//    private synchronized ScheduledTask getFirst() {
+//        peek()
+//    }
+
+    private Runnable task() {
         return () -> {
             while (!isEmpty()) {
-                try {
-                    if (ZonedDateTime.now().compareTo(peek().getDateTime()) >= 0) {
-                        System.out.print(peek().getDateTime().toLocalTime() + " number " + peek().getSerialNum());
-                        Future<Integer> future = es.submit(poll());
-                        try {
-                            System.out.println(" result " + future.get() + " time Execute " + ZonedDateTime.now().toLocalTime());
-                        } catch (ExecutionException e) {
-                            e.printStackTrace();
-                        }
-                    } else Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                if (ZonedDateTime.now().compareTo(peek().getDateTime()) >= 0) {
+//                System.out.print(peek().getDateTime().toLocalTime() + " number " + peek().getSerialNum());
+                ScheduledTask task = poll();
+                es.invoke(task.fork());
+                Long result = task.join();
+//                System.out.println(" result " + result + " time Execute " + ZonedDateTime.now().toLocalTime());
+//                }
             }
         };
     }

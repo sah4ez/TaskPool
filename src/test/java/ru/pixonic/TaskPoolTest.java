@@ -2,7 +2,6 @@ package ru.pixonic;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -12,7 +11,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 
 /**
@@ -93,7 +91,7 @@ public class TaskPoolTest extends Assert {
 
     @Test
     public void testExecutionTaskFromTaskPool() throws Exception {
-        ArrayList<Integer> results = new ArrayList<>();
+        ArrayList<Long> results = new ArrayList<>();
 
         ZonedDateTime now = ZonedDateTime.now();
 
@@ -113,10 +111,11 @@ public class TaskPoolTest extends Assert {
         ExecutorService es = Executors.newFixedThreadPool(10);
         while (taskPool.size() > 0) {
             ScheduledTask task = taskPool.poll();
-            Future<Integer> f = es.submit(task);
-            while (!f.isDone()) {
-
-            }
+//            Future<Long> f = (Future<Long>) es.submit(task);
+//            while (!f.isDone()) {
+//
+//            }
+            task.fork();
             if (taskPool.size() == 2 && !addTestDataSet) {
                 taskPool.addTask(new ScheduledTask(now, cf10));
                 taskPool.addTask(new ScheduledTask(now, cf3));
@@ -125,7 +124,7 @@ public class TaskPoolTest extends Assert {
 
                 addTestDataSet = true;
             }
-            results.add(f.get());
+            results.add(task.join());
         }
 
         es.shutdown();
@@ -178,23 +177,23 @@ public class TaskPoolTest extends Assert {
         taskPool.addTask(new ScheduledTask(now, cf));
         taskPool.addTask(new ScheduledTask(now, cf));
 
-        assertEquals(1, taskPool.poll().getSerialNum().intValue());
-        assertEquals(2, taskPool.poll().getSerialNum().intValue());
-        assertEquals(3, taskPool.poll().getSerialNum().intValue());
+        assertEquals(1, taskPool.poll().getSerialNum());
+        assertEquals(2, taskPool.poll().getSerialNum());
+        assertEquals(3, taskPool.poll().getSerialNum());
     }
 
-    @Ignore
-//    @Test
+//    @Ignore
+    @Test
     public void testStressMultiThread() {
         Thread addThread = new Thread(() -> {
             for (int i = 0; i < 500_000; i++) {
                 ZonedDateTime now = ZonedDateTime.now();
                 if (now.getMinute() < 55) {
                     int m = now.getMinute() + 1;
-                    if (i > 100_000) m = now.getMinute() + 1;
-                    if (i > 200_000) m = now.getMinute() + 2;
-                    if (i > 300_000) m = now.getMinute() + 3;
-                    if (i > 500_000) m = now.getMinute() + 4;
+//                    if (i > 100_000) m = now.getMinute() + 1;
+//                    if (i > 200_000) m = now.getMinute() + 2;
+//                    if (i > 300_000) m = now.getMinute() + 3;
+//                    if (i > 500_000) m = now.getMinute() + 4;
 
                     now = ZonedDateTime.of(
                             now.getYear(),
